@@ -19,7 +19,6 @@ export const AppRoutes = () => {
       />
       <Route path="/:not-found" element={<NotFound history={history} />} />
       <Route path="/:error" element={<Navigate to="/not-found" />} />
-      <Route path="/page/:error" element={<Navigate to="/not-found" />} />
       <Route path="/" element={<Navigate to="/page/0" />} />
     </Routes>
   )

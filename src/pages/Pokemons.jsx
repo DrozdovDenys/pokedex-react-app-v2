@@ -26,7 +26,7 @@ export const Pokemons = ({ history }) => {
     // =================GET POKEMONS TYPES AND CREATE A NEW POKEMON DATA===========================================
     const [getAllPokemons, isPokemonsLoading, pokemonsError] = useFatching(() => {
         pokemonsNames.map(async p => {
-            const pokemons = await PokemonsService.getAllById(p.url.match(/(?<!\w)\d+.?/g));
+            const pokemons = await PokemonsService.getAllById(p.url.split('/').filter(el => parseInt(el)).join(''));
             setPokemons(oldState => [...oldState, pokemons].sort((a, b) => a.id - b.id))
         })
     });
