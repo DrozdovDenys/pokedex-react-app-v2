@@ -1,78 +1,117 @@
-import React, { useEffect, useState } from 'react';
-import Pagination from '../Components/Pagination/Pagination';
-import Preloader from '../Components/Preloader/Preloader';
-import { FiltersBar } from '../Components/FiltersBar/FiltersBar';
-import { useParams } from 'react-router-dom';
-import { PokemonsService } from '../API/pokemonsService';
-import { useFatching } from '../hooks/useFetching'
-import { PokemonsList } from '../Components/PokemonsList/PokemonsList';
+import React, { useEffect, useState } from "react";
+import Pagination from "../Components/Pagination/Pagination";
+import Preloader from "../Components/Preloader/Preloader";
+import { FiltersBar } from "../Components/FiltersBar/FiltersBar";
+import { useParams } from "react-router-dom";
+import { PokemonsList } from "../Components/PokemonsList/PokemonsList";
+import { useDispatch, useSelector } from "react-redux";
+import { getAllPokemonsNames } from "../store/allPokemonsNamesAC";
+import { getPokemons } from "../store/pokemonsAC";
 
 export const Pokemons = ({ history }) => {
-    const { numOfPage } = useParams();
+  const { numOfPage } = useParams();
 
-    const [pokemonsNames, setPokemonsNames] = useState([]);
-    const [pokemons, setPokemons] = useState([]);
-    const [filteredPokemons, setfilteredPokemons] = useState([]);
-    const [currentPage, setCurrentPage] = useState(Number(numOfPage));
-    const [pokemonsPerPage, setPokemnsPerPage] = useState(10);
-    const pokemonsPerPageOptions = [10, 20, 50];
+  const [currentPage, setCurrentPage] = useState(Number(numOfPage));
+  const [pokemonsPerPage, setPokemnsPerPage] = useState(10);
+  const pokemonsPerPageOptions = [10, 20, 50];
+  const lastPokemonIndex = currentPage * pokemonsPerPage + pokemonsPerPage;
+  const firstPokemonIndex = lastPokemonIndex - pokemonsPerPage;
 
-    // ====================GET ALL POKEMONS NAME AND URL =================================================
-    const [getPokemonsNames, isLoading, error] = useFatching(async () => {
-        const pokemonsNames = await PokemonsService.getAll();
-        setPokemonsNames(pokemonsNames);
-    });
+  const [filter, setFilter] = useState({
+    types: [],
+    search: "",
+  });
 
-    // =================GET POKEMONS TYPES AND CREATE A NEW POKEMON DATA===========================================
-    const [getAllPokemons, isPokemonsLoading, pokemonsError] = useFatching(() => {
-        pokemonsNames.map(async p => {
-            const pokemons = await PokemonsService.getAllById(p.url.split('/').filter(el => parseInt(el)).join(''));
-            setPokemons(oldState => [...oldState, pokemons].sort((a, b) => a.id - b.id))
-        })
-    });
+  const handleChangePage = (e, newPage) => {
+    setCurrentPage(newPage);
+    history(`/page/${newPage}`);
+  };
 
-    useEffect(() => {
-        getPokemonsNames();
-    }, [])
+  const handleChangeRowsPerPage = (event) => {
+    setPokemnsPerPage(parseInt(event.target.value, 10));
+    setCurrentPage(0);
+  };
 
-    const handleChangePage = (e, newPage) => {
-        setCurrentPage(newPage);
-        history(`/page/${newPage}`)
-    };
+  const {
+    is_APN_Loading,
+    APN_Error,
+    is_FPN_Loading,
+    FPN_Error,
+    searchedPokemonsNames,
+    is_SPN_Loading,
+    SPN_Error,
+    pokemons,
+    is_P_Loading,
+    P_Error,
+  } = useSelector((state) => state.pokemons);
 
-    const handleChangeRowsPerPage = (event) => {
-        setPokemnsPerPage(parseInt(event.target.value, 10));
-        setCurrentPage(0);
-    };
+  const dispatch = useDispatch();
 
-    const lastPokemonIndex = currentPage * pokemonsPerPage + pokemonsPerPage;
-    const firstPokemonIndex = lastPokemonIndex - pokemonsPerPage;
+  useEffect(() => {
+    dispatch(getAllPokemonsNames());
+  }, []);
 
-    useEffect(() => {
-        setPokemons([]);
-        getAllPokemons();
-    }, [pokemonsNames.length]);
+  useEffect(() => {
+    dispatch(
+      getPokemons({
+        f: firstPokemonIndex,
+        l: lastPokemonIndex,
+        q: filter.search,
+      })
+    );
+  }, [currentPage, pokemonsPerPage, searchedPokemonsNames.length]);
 
-    return (
+  return (
+    <>
+      {APN_Error || FPN_Error || P_Error || SPN_Error ? (
+        <h1 style={{ textAlign: "center" }}>
+          {APN_Error || FPN_Error || P_Error || SPN_Error}
+        </h1>
+      ) : (
         <>
-            {error
-                ? <h1>{error}</h1>
-                : <>
-                    {
-                        isLoading
-                            ? (<Preloader />)
-                            : (
-                                <div>
-                                    <FiltersBar filteredPokemons={filteredPokemons} setfilteredPokemons={setfilteredPokemons} pokemons={pokemons} setCurrentPage={setCurrentPage} history={history} />
-                                    <Pagination currentPage={currentPage} pokemonsPerPage={pokemonsPerPage} totalPokemons={filteredPokemons.length === 0 ? pokemonsNames.length : filteredPokemons.length} pokemonsPerPageOptions={pokemonsPerPageOptions} handleChangeRowsPerPage={handleChangeRowsPerPage} handleChangePage={handleChangePage} />
+          {is_APN_Loading ? (
+            <Preloader />
+          ) : (
+            <div>
+              <FiltersBar
+                filter={filter}
+                setFilter={setFilter}
+                history={history}
+                setCurrentPage={setCurrentPage}
+              />
 
-                                    <PokemonsList pokemons={filteredPokemons.length ? filteredPokemons.slice(firstPokemonIndex, lastPokemonIndex) : pokemons.slice(firstPokemonIndex, lastPokemonIndex)} history={history} numOfPage={numOfPage} />
-                                    <Pagination currentPage={currentPage} pokemonsPerPage={pokemonsPerPage} totalPokemons={filteredPokemons.length === 0 ? pokemonsNames.length : filteredPokemons.length} pokemonsPerPageOptions={pokemonsPerPageOptions} handleChangeRowsPerPage={handleChangeRowsPerPage} handleChangePage={handleChangePage} />
-                                </div>
-                            )
-                    }
-                </>}
+              <Pagination
+                currentPage={currentPage}
+                pokemonsPerPage={pokemonsPerPage}
+                totalPokemons={searchedPokemonsNames.length}
+                pokemonsPerPageOptions={pokemonsPerPageOptions}
+                handleChangeRowsPerPage={handleChangeRowsPerPage}
+                handleChangePage={handleChangePage}
+              />
 
+              {is_P_Loading || is_FPN_Loading || is_SPN_Loading ? (
+                <Preloader />
+              ) : (
+                <div style={{marginBottom: 20}}>
+                  <PokemonsList
+                    pokemons={pokemons}
+                    history={history}
+                    numOfPage={numOfPage}
+                  />
+                  <Pagination
+                    currentPage={currentPage}
+                    pokemonsPerPage={pokemonsPerPage}
+                    totalPokemons={searchedPokemonsNames.length}
+                    pokemonsPerPageOptions={pokemonsPerPageOptions}
+                    handleChangeRowsPerPage={handleChangeRowsPerPage}
+                    handleChangePage={handleChangePage}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </>
-    )
-}
+      )}
+    </>
+  );
+};

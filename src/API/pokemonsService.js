@@ -9,8 +9,8 @@ export class PokemonsService {
     return response.data.results;
   }
 
-  static async getAllById(ID) {
-    const response = await axios.get(`https://pokeapi.co/api/v2/pokemon/${ID}`);
+  static async getAllByUrl(pokemonName) {
+    const response = await axios.get(`https://pokeapi.co/api/v2/pokemon/${pokemonName}/`);
     const { data } = response;
     const { id, name, types, sprites } = data;
     const { other } = sprites;
@@ -30,7 +30,13 @@ export class PokemonsService {
     const response = await axios.get(
       `https://pokeapi.co/api/v2/pokemon/${pokemonName}/`
     );
-
     return response.data;
+  }
+
+  static async getByTypes(pokemonTypes) {
+    const response = await axios.get(
+      `https://pokeapi.co/api/v2/type/${pokemonTypes}/`
+    );
+    return response.data.pokemon;
   }
 }

@@ -1,58 +1,73 @@
-import React from 'react';
-import classes from './filterByTypes.module.css'
+import React, { useEffect } from "react";
+import { Autocomplete, TextField } from "@mui/material";
+import parse from "autosuggest-highlight/parse";
+import match from "autosuggest-highlight/match";
+import { useDispatch, useSelector } from "react-redux";
+import { getFilteredPokemonsNames } from "../../store/filteredPokemonsAC";
 
-export const FilterByTypes = ({ active, setActive, filter, setFilter, handleCheckbox }) => {
-    const options = [
-        'grass',
-        'fire',
-        'bug',
-        'fairy',
-        'dragon',
-        'shadow',
-        'ground',
-        'normal',
-        'psychic',
-        'steel',
-        'dark',
-        'electric',
-        'fighting',
-        'flying',
-        'ice',
-        'poison',
-        'rock',
-        'water',
-        'unknown',
-        'ghost'
-    ]
+export const FilterByTypes = ({
+  history,
+  filter,
+  setFilter,
+  setCurrentPage,
+}) => {
+  const dispatch = useDispatch();
+  const searchedPokemonsNames = useSelector(
+    (state) => state.pokemons.searchedPokemonsNames
+  );
 
-    function generateOptions(options) {
+  useEffect(() => {
+    dispatch(
+      getFilteredPokemonsNames({
+        t: filter.types,
+        h: history,
+      })
+    );
+  }, [filter.types]);
+
+  return (
+    <Autocomplete
+      freeSolo
+      sx={{ maxWidth: { xs: "auto", sm: 300 }, width: "100%" }}
+      value={filter.search}
+      onChange={(event, newValue) => {
+        history(`/page/0`);
+        setCurrentPage(0);
+        setFilter((oldState) => ({
+          ...oldState,
+          search: newValue?.name ?? newValue ?? "",
+        }));
+      }}
+      isOptionEqualToValue={(option, value) => option === value.name}
+      getOptionLabel={(option) => {
+        if (typeof option === "string") {
+          return option;
+        }
+        return option.name;
+      }}
+      options={searchedPokemonsNames}
+      renderInput={(params) => <TextField {...params} label="Pokémon name" />}
+      renderOption={(props, option, { inputValue }) => {
+        const matches = match(option.name ?? option, inputValue, {
+          insideWords: true,
+        });
+        const parts = parse(option.name ?? option, matches);
+
         return (
-            options.map(option =>
-                <div className='group-type' key={option}>
-                    <input
-                        type='checkbox'
-                        onChange={handleCheckbox}
-                        name={option}
-                        id={option}
-                    />
-                    <label htmlFor={option}>{option}</label>
-                </div>
-            )
-        )
-    }
-
-    return (
-        <div>
-            <button className={classes.filterByTypesBtn} onClick={() => {
-                setActive(!active);
-                setFilter({ ...filter, search: '' });
-            }} >
-                <img src={require('../../images/filter_icon.png')} width='30' height='30' alt="filter-icon" />
-                <span>Filtrer by types</span>
-            </button>
-            <div className={`filter-by-type  ${active ? 'active' : ''}`}>
-                {generateOptions(options)}
+          <li {...props}>
+            <div>
+              {parts.map((part, index) => (
+                <span
+                  key={index}
+                  style={{ fontWeight: part.highlight ? 700 : 400 }}
+                >
+                  {part.text}
+                </span>
+              ))}
             </div>
-        </div>
-    )
-}
+          </li>
+        );
+      }}
+    />
+  );
+};
