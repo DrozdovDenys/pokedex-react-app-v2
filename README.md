@@ -1,3 +1,29 @@
+<h1 align="center">«Pokedex React App»</h1>
+
+<div align="center"><img src="/src/images/readme.jpg"/></div>
+
+<h2>Descripion</h2>
+Using the open pokemon API (http://pokeapi.co) i builded a pokedex with the following functionality:
+
+1.List pokemons in a table view (or cards) with their name, avatar, type (should visually look as a colored tag) and the main pokemon stats (whichever additional pokemon info you want to show)
+2.The list must have a pagination with an ability to select how many items to show per page (10 / 20 / 50)
+3.Filter the pokemons by name with a search box
+4.Filter the pokemons by type using tags (multiple selected tags have to show pokemons with any of the types selected)
+
+
+<h2>Technologies</h2>
+
++ React
++ Redux Toolkit
++ API
++ Axios 
++ React Router DOM 
++ MUI
++ Adaptive
+
+<h3 align="center"><a href="https://drozdovdenys.github.io/pokedex-react-app-v2
+/">SEE LIVE</a></h3>
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
